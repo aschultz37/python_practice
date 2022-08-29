@@ -16,6 +16,7 @@ def parse_expression(expr):
     '''Parses an expression by spaces and returns it as a list.'''
     return expr.split(" ")
 
+
 def do_operation(operator, operand, result):
     '''Performs an operation on two operands and returns result.\n
     If the operator is invalid, returns the second operand (result)\n
@@ -69,10 +70,13 @@ while True:
         print('Cleared result.\n')
     else:
         parsed = parse_expression(expression)
-        if cont == False:
-            result = eval_expression(parsed)
-            cont = True
+        if(len(parsed) <= 1):
+            print(f'Invalid input. Please try again.')
         else:
-            result = eval_expression(parsed, result, cont)
-            cont = True
-        print(f'Result: {result:.2}\n')
+            if cont == False:
+                result = eval_expression(parsed)
+                cont = True
+            else:
+                result = eval_expression(parsed, result, cont)
+                cont = True
+        print(f'Result: {result:.5}\n')
