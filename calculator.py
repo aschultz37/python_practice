@@ -1,15 +1,19 @@
-'''This program calculates the result of an expression written in Reverse Polish Notation.
+'''This program calculates the result of an expression written in Reverse\
+Polish Notation.
 '''
 
-intro_message = 'This program calculates expressions using Reverse Polish Notation.\n'
-example = 'Ex.: 4 5 + 7 * 3 - 20 / 2 %\nUse \'clear\' to clear, \'quit\' to quit.\n'
+intro_message = 'This program calculates expressions using Reverse Polish\
+Notation.\n'
+example = 'Ex.: 4 5 + 7 * 3 - 20 / 2 %\nUse \'clear\' to clear, \'quit\' to\
+quit.\n'
 
 print(intro_message)
 print(example)
 
 def get_expression():
     '''Gets expression from user input and returns it as a string.'''
-    print('Pease enter the expression in Reverse Polish Notation (no parentheses):')
+    print('Pease enter the expression in Reverse Polish Notation (no\
+    parentheses):')
     return input()
 
 def parse_expression(expr):
@@ -48,12 +52,14 @@ def eval_expression(expr, running_result=0, continuing=False):
             try:
                 stack.append(do_operation(i, stack.pop(), stack.pop()))
             except IndexError:
-                print(f'Error in do_operation: Incorrect number of arguments. Check operator validity and operands.')
+                print(f'Error in do_operation: Incorrect number of arguments.\
+                 Check operator validity and operands.')
                 return running_result
     try:
         return stack.pop()
     except IndexError:
-        print(f'Error popping result: Empty list. Check operator validity and operands.')
+        print(f'Error popping result: Empty list. Check operator validity and\
+        operands.')
         return running_result
 
 result = 0
