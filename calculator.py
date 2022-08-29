@@ -2,7 +2,7 @@
 '''
 
 intro_message = 'This program calculates expressions using Reverse Polish Notation.\n'
-example = 'Ex.: 4 5 + 7 * 3 - 20 / 2 %\n'
+example = 'Ex.: 4 5 + 7 * 3 - 20 / 2 %\nUse \'clear\' to clear, \'quit\' to quit.\n'
 
 print(intro_message)
 print(example)
