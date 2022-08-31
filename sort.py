@@ -26,7 +26,7 @@ def main_menu():
 def sort_menu():
     choice = '0'
     print('Select Sort:')
-    print('1. New Input (Back)')
+    print('1. Main Menu/New Input')
     print('2. Output to Console')
     print('3. Output to File')
     print('4. Ascending')
