@@ -3,7 +3,6 @@ Input can be taken from the console or a text-based file.
 '''
 
 import os
-import string
 import numpy as np
 import pandas as pd
 
@@ -16,11 +15,23 @@ class FileExtError(Exception):
 
 def main_menu():
     choice = '0'
+    print('Select Input:')
+    print('1. Console')
+    print('2. File')
+    print('3. Quit')
     while choice not in ['1', '2', '3']:
-        print('Select Input:')
-        print('1. Console')
-        print('2. File')
-        print('3. Quit')
+        choice = input()
+    return choice
+
+def sort_menu():
+    choice = '0'
+    print('Select Sort:')
+    print('1. New Input (Back)')
+    print('2. Output to Console')
+    print('3. Output to File')
+    print('4. Ascending')
+    print('5. Descending')
+    while choice not in ['1', '2', '3', '4', '5']:
         choice = input()
     return choice
 
@@ -73,18 +84,70 @@ def read_file(file_path, delimiter):
     except FileNotFoundError:
         raise FileNotFoundError
 
+def output_dataframe(df):
+    written = False
+    while written == False:
+        file_path = ''
+        while file_path == '':
+            print('Enter the output file path:')
+            file_path = input()
+        #todo add option to override default delimiter
+        file_tup = extract_file_tup(file_path)
+        file_ext = file_tup[1]
+        if file_ext == '.csv':
+            df.to_csv(file_path)
+            written = True
+        elif file_ext == '.txt':
+            df.to_csv(file_path, sep=' ')
+            written = True
+        else:
+            raise FileExtError        
+
+def do_sort(df, option):
+    axis_in = ''
+    if option in ['4', '5']:
+        print('Sort within: 1. Row; or 2. Column?')
+        while axis_in not in ['1', '2']:
+            axis_in = input()      
+    if option == '2':
+        print(df)
+    elif option == '3':
+        try:
+            output_dataframe(df)
+        except FileExtError:
+            print('Error: File extension not supported.')
+    elif option == '4':
+        if axis_in == '1':
+            df.sort_values(by=list(df.index), axis='columns', 
+                                ascending=True, inplace=True, kind='quicksort')
+        else:
+            df.sort_values(by=list(df.columns), axis='index', 
+                                ascending=True, inplace=True, kind='quicksort')
+    elif option == '5':
+        if axis_in == '1':
+            df.sort_values(by=list(df.index), axis='columns', 
+                                ascending=False, inplace=True, kind='quicksort')
+        else:
+            df.sort_values(by=list(df.columns), axis='index',
+                                ascending=False, inplace=True, kind='quicksort')
+    else:
+        print('Error: Invalid sort selection.')
+
 #initial menu choice to start the main loop
 input_choice = main_menu()
 
 #main function/controller
-while(input_choice != '3'):
-    if(input_choice == '1'):
+while input_choice != '3':
+    if input_choice == '1':
         input_info = console_input()
-        #parse and go to sort menu
         console_dataframe = parse_input(input_info[0], input_info[1])
-    elif(input_choice == '2'):
+        sort_choice = '0'
+        while sort_choice != '1':
+            sort_choice = sort_menu()
+            if sort_choice != '1':
+                do_sort(console_dataframe, sort_choice)
+    elif input_choice == '2':
         read_info = file_input()
-        #read file, then go to sort menu
         try:
             file_dataframe = read_file(read_info[0], read_info[1])
         except FileExtError:
@@ -92,7 +155,11 @@ while(input_choice != '3'):
         except FileNotFoundError:
             print('Error: File not found.\n')
         else:
-            pass
+            sort_choice = '0'
+            while sort_choice != '1':
+                sort_choice = sort_menu()
+                if sort_choice != '1':
+                    do_sort(file_dataframe, sort_choice)
     else:
         print('Invalid choice. Try again.')
     input_choice = main_menu()
