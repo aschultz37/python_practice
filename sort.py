@@ -76,7 +76,7 @@ while(input_choice != '3'):
         #parse and go to sort menu
     elif(input_choice == '2'):
         read_info = file_input()
-        #read file, then parse and go to sort menu
+        #read file, then go to sort menu
         try:
             raw_file = read_file(read_info[0], read_info[1])
         except FileExtError:
