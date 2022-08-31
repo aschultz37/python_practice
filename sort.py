@@ -95,10 +95,10 @@ def output_dataframe(df):
         file_tup = extract_file_tup(file_path)
         file_ext = file_tup[1]
         if file_ext == '.csv':
-            df.to_csv(file_path)
+            df.to_csv(file_path, header=False, index=False)
             written = True
         elif file_ext == '.txt':
-            df.to_csv(file_path, sep=' ')
+            df.to_csv(file_path, header=False, index=False, sep=' ')
             written = True
         else:
             raise FileExtError        
