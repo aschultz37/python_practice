@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 intro_message = ("This program sorts information from the console or \
-    a text-based file.\nSelect input option in menu. Q to quit.")
+    a file.\nSelect input option in menu, then sort and output.")
 print(intro_message)
 
 class FileExtError(Exception):
