@@ -3,6 +3,7 @@ Input can be taken from the console or a text-based file.
 '''
 
 import os
+import string
 import numpy as np
 import pandas as pd
 
@@ -29,12 +30,17 @@ def console_input():
     while user_input == '':
         print('Invalid input. Try again:')
         user_input = input()
-    print('Enter the delimiter:')
+    print('Enter the delimiter (default: space):')
     delimiter = input()
-    while delimiter == '':
-        print('Invalid input. Try again:')
-        user_input = input()
+    if delimiter == '':
+        delimiter = ' '
     return (user_input, delimiter)
+
+def parse_input(user_input, delimiter):
+    '''Return pd.DataFrame from string user_input split by delimiter.'''
+    parsed_strings = user_input.split(delimiter)
+    parsed_dict = {x: parsed_strings[x] for x in range(0, len(parsed_strings))}
+    return pd.DataFrame(data=parsed_dict, index=[0])
 
 def extract_file_tup(file_path):
     file_basename = os.path.basename(file_path)
@@ -53,20 +59,21 @@ def read_file(file_path, delimiter):
     try:
         if file_ext == '.csv':
             if(delimiter == ''):
-                return pd.read_csv(file_path)
+                return pd.read_csv(file_path, header=None)
             else:
-                return pd.read_csv(file_path, sep=delimiter)
+                return pd.read_csv(file_path, sep=delimiter, header=None)
         elif file_ext == '.txt':
             if delimiter == '':
-                return pd.read_csv(file_path, delim_whitespace=True)
+                return pd.read_csv(file_path, delim_whitespace=True,
+                                   header=None)
             else:
-                return pd.read_csv(file_path, sep=delimiter)
+                return pd.read_csv(file_path, sep=delimiter, header=None)
         else:
             raise FileExtError
     except FileNotFoundError:
         raise FileNotFoundError
 
-
+#initial menu choice to start the main loop
 input_choice = main_menu()
 
 #main function/controller
@@ -74,11 +81,12 @@ while(input_choice != '3'):
     if(input_choice == '1'):
         input_info = console_input()
         #parse and go to sort menu
+        console_dataframe = parse_input(input_info[0], input_info[1])
     elif(input_choice == '2'):
         read_info = file_input()
         #read file, then go to sort menu
         try:
-            raw_file = read_file(read_info[0], read_info[1])
+            file_dataframe = read_file(read_info[0], read_info[1])
         except FileExtError:
             print('Error: File extension not supported.\n')
         except FileNotFoundError:
