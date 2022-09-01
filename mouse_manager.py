@@ -1,7 +1,10 @@
-import os
-import pandas as pd
+#import os
+#import pandas as pd
 
 def NoKeyError(Exception):
+    pass
+
+def MouseNotFound(Exception):
     pass
 
 class Mouse:
@@ -107,19 +110,53 @@ class Colony:
 #Master Dict of All Colonies
 colonies = {}
 
+def list_colonies():
+    return [x[1] for x in colonies.items()]
+
 def import_mice(filename):
     '''Imports mice from a file. Supports multiple formats as long as the\
         header and indices are correct in file.'''
     pass #TODO
 
+def find_mouse(mouse, colony_in=None, cage_in=None):
+    '''Searches for a mouse. Returns tuple of (colony, cage).'''
+    if cage_in == None:
+        if colony_in == None:
+            for colony in colonies:
+                for cage in colony.list_cages():
+                    if mouse.number in cage.mice:
+                        return (colony, cage)
+        else:
+            for cage in colony_in.list_cages():
+                if mouse.number in cage.mice:
+                    return (colony_in, cage)
+    else:
+        if colony_in == None:
+            for colony in colonies:
+                if cage_in.number in colony.cages:
+                    if mouse.number in colony.cages[cage_in.number]:
+                        return (colony, cage_in)
+        else:
+            if cage_in.number in colony_in.cages:
+                if mouse.number in colony_in.cages[cage_in.number]:
+                    return (colony_in, cage_in)
+    raise MouseNotFound
+
+def check_deceased(mouse, colony_in=None):
+    '''Returns True if mouse is deceased, False if living.'''
+    if colony_in == None:
+        for colony in colonies:
+            if mouse.number in colony.deceased_mice:
+                return True
+    else:
+        if mouse.number in colony_in.deceased_mice:
+            return True
+    return False
+
 def find_lineage(mouse):
     '''Returns list of mice which is the complete lineage for a mouse.\
         The first element is parent tuple (mother, father). Second element\
          is maternal grandparents tuple, etc.'''
-    pass #TODO
-
-def find_mouse(mouse, colony=None, cage=None):
-    '''Searches for a mouse. Returns tuple of (colony, cage).'''
     pass #TODO
 
 def switch_colony(mouse, old_colony, new_colony, new_cage_num,
