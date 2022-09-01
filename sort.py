@@ -11,7 +11,7 @@ intro_message = ("This program sorts information from the console or \
 print(intro_message)
 
 class FileExtError(Exception):
-    pass
+    pass 
 
 def main_menu():
     choice = '0'
@@ -25,7 +25,7 @@ def main_menu():
 
 def sort_menu():
     choice = '0'
-    print('Select Sort:')
+    print('Select Operation:')
     print('1. Main Menu/New Input')
     print('2. Output to Console')
     print('3. Output to File')
