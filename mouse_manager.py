@@ -1,3 +1,4 @@
+from datetime import date
 #import os
 #import pandas as pd
 
@@ -14,22 +15,36 @@ def MouseNotFoundError(Exception):
 global_mouse_number = 0
 global_cage_number = 0
 
+class Node:
+    '''To implement a tree for tracking lineage.'''
+    def __init__(self, mother, father):
+        self.mother = mother
+        self.father = father
+
+    def pre_order(self):
+        pass
+
+    def post_order(self):
+        pass
+
+    def print_tree(self):
+        pass
+
 class Mouse:
     '''For each mouse, stores globally unqiue number, number in cage, age,\
         genotype, parents, children, and if mouse is alive.'''
-    def __init__(self, number, parents, num_in_cage=0, age=0, genotype=None,
-                 children=[], living=True):
+    def __init__(self, number, mother_mouse, father_mouse, num_in_cage=0,
+                d_o_b=date.today(), genotype=None, living=True):
         self.number = number
-        self.parents = parents
+        self.lineage = Node(mother_mouse, father_mouse)
         self.num_in_cage = num_in_cage
-        self.age = age
+        self.d_o_b = d_o_b
         self.genotype = genotype
-        self.children = children
         self.living = living
     
     def list_mouse_info(self):
         return [self.number, self.parents, self.num_in_cage, self.age,
-                self.genotype, self.children, self.living]
+                self.genotype, self.living]
 
 class Cage:
     '''Stores cage number, physical location, and list of mice in cage.'''
@@ -213,9 +228,7 @@ def find_mouse(mouse, colony_in=None, cage_in=None):
         raise MouseNotFoundError
 
 def find_lineage(mouse):
-    '''Returns list of mice which is the complete lineage for a mouse.\
-        The first element is parent tuple (mother, father). Second element\
-         is maternal grandparents tuple, etc.'''
+    '''Returns the lineage of a mouse as the root of a binary tree.'''
     pass #TODO
 
 def switch_colony(mouse, old_colony, new_colony, new_cage_num,
