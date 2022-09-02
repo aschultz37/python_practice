@@ -27,6 +27,9 @@ def CageNotEmptyError(Exception):
 def CageNotFoundError(Exception):
     pass
 
+def ColonyNotEmptyError(Exception):
+    pass
+
 #Track the globally unique numbers for mice and cages
 global_mouse_number = 0
 global_cage_number = 0
@@ -108,7 +111,7 @@ class Colony:
         self.inactive_cages = {}
     
     def mouse_in_colony(self, mouse: Mouse):
-        for cage in self.cages:
+        for cage in self.cages.items():
             if mouse.number in cage[1]:
                 return True
         return False
@@ -130,24 +133,24 @@ class Colony:
     def list_all_cages(self):
         '''Returns a dictionary of all cages formatted as
         {'active': [], 'inactive': []}.'''
-        return {'active': self.list_active_cages, 
-                'inactive': self.list_inactive_cages}
+        return {'active': self.list_active_cages(), 
+                'inactive': self.list_inactive_cages()}
     
     def list_living_mice(self):
         '''Returns a list of all living mice in the colony.'''
-        return [mouse.number for cage in self.cages.items() 
-                for mouse in cage[1]]
+        return [mouse[1] for cage in self.cages.items() 
+                for mouse in cage[1].mice.items()]
     
     def list_deceased_mice(self):
         '''Returns a list of all deceased mice in the colony.'''
-        return [mouse.number for cage in self.cages.items() 
-                for mouse in cage[1]]
+        return [mouse[1] for cage in self.cages.items() 
+                for mouse in cage[1].mice.items()]
 
     def list_all_mice(self):
         '''Returns a dictionary of all mice formatted as
         {'living': [], 'deceased': []}.'''
-        return {'living': self.list_living_mice, 
-                'deceased': self.list_deceased_mice}
+        return {'living': self.list_living_mice(), 
+                'deceased': self.list_deceased_mice()}
 
     def add_cage(self, cage: Cage):
         '''Adds a cage to the colony.'''
@@ -194,9 +197,9 @@ class Colony:
                 self.move_mouse_helper(mouse, new_cage, old_cage)
                 return True
         else:
-            for cage in self.cages:
-                if mouse.number in cage.mice:
-                    self.move_mouse_helper(mouse, new_cage, cage)
+            for cage in self.cages.items():
+                if mouse.number in cage[1].mice:
+                    self.move_mouse_helper(mouse, new_cage, cage[1])
                     return True
         if mouse.number in self.deceased_mice:
             raise MouseDeceasedError
@@ -217,10 +220,10 @@ class Colony:
                 else:
                     raise MouseNotFoundError
         else:
-            for cage_tmp in self.cages:
-                if mouse.number in cage_tmp:
+            for cage_tmp in self.cages.items():
+                if mouse.number in cage_tmp[1]:
                     mouse.living = False
-                    self.deceased_mice[mouse.number] = cage_tmp.pop(
+                    self.deceased_mice[mouse.number] = cage_tmp[1].pop(
                                                             mouse.number)
                     return True
         if mouse.number in self.deceased_mice:
@@ -231,9 +234,9 @@ class Colony:
     def sac_cage(self, cage: Cage):
         '''For all mice in a cage, changes mouse living status to False.
          Removes cage from Colony.cages.'''
-        if cage.number in self.cages:
-            for mouse in cage:
-                self.sac_mouse(mouse, cage)
+        if cage.number in self.cages.items():
+            for mouse in cage[1]:
+                self.sac_mouse(mouse, cage[1])
             self.cages.pop(cage.number)
         else:
             raise CageNotFoundError
@@ -250,6 +253,8 @@ def add_colony(name: str):
 
 def remove_colony(name: str):
     if name in colonies:
+        if len(colonies[name].list_living_mice()) != 0:
+            raise ColonyNotEmptyError
         return colonies.pop(name)
     else:
         print(f"Error: Colony {name} not found.")
@@ -266,8 +271,8 @@ def import_mice(filename: str):
 def check_deceased(mouse, colony_in: Colony=None):
     '''Returns True if mouse is deceased, False if living.'''
     if colony_in == None:
-        for colony in colonies:
-            if mouse.number in colony.deceased_mice:
+        for colony in colonies.items():
+            if mouse.number in colony[1].deceased_mice:
                 return True
     else:
         if mouse.number in colony_in.deceased_mice:
@@ -278,8 +283,8 @@ def find_mouse(mouse, colony_in: Colony=None, cage_in: Cage=None):
     '''Searches for a mouse. Returns tuple of (colony, cage).'''
     if cage_in == None:
         if colony_in == None:
-            for colony in colonies:
-                for cage in colony.list_cages():
+            for colony in colonies.items():
+                for cage in colony[1].list_cages():
                     if mouse.number in cage.mice:
                         return (colony, cage)
         else:
@@ -288,13 +293,13 @@ def find_mouse(mouse, colony_in: Colony=None, cage_in: Cage=None):
                     return (colony_in, cage)
     else:
         if colony_in == None:
-            for colony in colonies:
-                if cage_in.number in colony.cages:
-                    if mouse.number in colony.cages[cage_in.number]:
+            for colony in colonies.items():
+                if cage_in.number in colony[1].cages:
+                    if mouse.number in colony[1].cages[cage_in.number].mice:
                         return (colony, cage_in)
         else:
             if cage_in.number in colony_in.cages:
-                if mouse.number in colony_in.cages[cage_in.number]:
+                if mouse.number in colony_in.cages[cage_in.number].mice:
                     return (colony_in, cage_in)
     if check_deceased(mouse, colony_in) == True:
         raise MouseDeceasedError
