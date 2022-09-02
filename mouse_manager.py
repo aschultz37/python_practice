@@ -4,13 +4,20 @@
 def NoKeyError(Exception):
     pass
 
-def MouseNotFound(Exception):
+def MouseDeceasedError(Exception):
     pass
+
+def MouseNotFoundError(Exception):
+    pass
+
+#Track the globally unique numbers for mice and cages
+global_mouse_number = 0
+global_cage_number = 0
 
 class Mouse:
     '''For each mouse, stores globally unqiue number, number in cage, age,\
         genotype, parents, children, and if mouse is alive.'''
-    def __init__(self, number, parents, num_in_cage=0, age=0, genotype='',
+    def __init__(self, number, parents, num_in_cage=0, age=0, genotype=None,
                  children=[], living=True):
         self.number = number
         self.parents = parents
@@ -40,33 +47,35 @@ class Cage:
         if mouse.number not in self.mice:
             self.mice[mouse.number] = mouse
         else:
-            print("Error: Mouse already in cage.")
+            print(f"Error: Mouse {mouse.number} already in cage {self.number}.")
 
-    def remove_mouse(self, mouse=None, key=''):
+    def remove_mouse(self, mouse=None, key=None):
         '''Removes a mouse from a cage. Mouse specified by object or\
             directly by mouse number. NoKeyError if neither is provided.'''
-        if key != '':
+        if key != None:
             try:
                 return self.mice.pop(key)
             except KeyError:
-                print("Error: Key not found in cage.")
+                print(f"Error: Key {key} not found in cage {self.number}.")
         else:
             if mouse != None:
                 try:
                     return self.mice.pop(mouse.number)
                 except KeyError:
-                    print("Error: Mouse not found in cage.")
+                    print(f"Error: Mouse {mouse.number} not found in cage \
+                        {self.number}.")
             else:
                 raise NoKeyError
 
 class Colony:
     '''Stores all cages in a colony as a dictionary.'''
-    def __init__(self, cages={}):
+    def __init__(self, name, cages={}):
+        self.name = name
         self.cages = cages
         self.deceased_mice = {}
     
     def list_cages(self):
-        '''Returns a list of call cages in the colony.'''
+        '''Returns a list of all cages in the colony.'''
         return [x[1] for x in self.cages.items()]
 
     def add_cage(self, cage):
@@ -74,41 +83,88 @@ class Colony:
         if cage.number not in self.cages:
             self.cages[cage.number] = cage
         else:
-            print("Error: Cage already in colony.")
+            print(f"Error: Cage {cage.number} already in colony {self.name}.")
 
-    def remove_cage(self, cage=None, key=''):
+    def remove_cage(self, cage=None, key=None):
         '''Removes a cage from the colony. Cage specified by object or\
             directly by cage number. NoKeyError if neither is provided.'''
-        if key != '':
+        if key != None:
             try:
                 return self.cages.pop(key)
             except KeyError:
-                print("Error: Key not found in colony.")
+                print(f"Error: Key {key} not found in colony {self.name}.")
         else:
             if cage != None:
                 try:
                     return self.cages.pop(cage.number)
                 except KeyError:
-                    print("Error: Cage not found in colony.")
+                    print(f"Error: Cage {cage.number} not found in colony \
+                        {self.name}.")
             else:
                 raise NoKeyError
     
+    def move_mouse_helper(self, mouse, new_cage, old_cage):
+        '''Checks if new_cage exists in colony and creates it if not.\
+            Moves mouse from old_cage to new_cage.'''
+        if new_cage in self.cages:
+            new_cage.mice[mouse.number] = old_cage.mice.pop(mouse.number)
+        else:
+            self.cages[new_cage.number] = new_cage
+            new_cage.mice[mouse.number] = old_cage.mice.pop(mouse.number)
+
     def move_mouse(self, mouse, new_cage, old_cage=None):
         '''Moves a mouse from existing cage to a new one.'''
-        #If old_cage is provided, check that mouse is in the cage
-        #If old_cage is not provided, find it by searching for mouse
-        #Check if new_cage exists; if not, make new_cage
-        #Remove mouse from old cage (popped from dict)
-        #Add mouse to new cage (from return of remove statement)
-        pass #TODO
+        if old_cage != None:
+            if mouse.number in old_cage.mice:
+                self.move_mouse_helper(mouse, new_cage, old_cage)
+                return True
+        else:
+            for cage in self.cages:
+                if mouse.number in cage.mice:
+                    self.move_mouse_helper(mouse, new_cage, cage)
+                    return True
+        if mouse.number in self.deceased_mice:
+            raise MouseDeceasedError
+        else:
+            raise MouseNotFoundError
 
-    def sac_mouse(self, mouse, cage=None, cage_num=None):
+    def sac_mouse(self, mouse, cage=None):
         '''Changes mouse living status to False. Removes (pops) mouse from\
             cage and adds it to Colony.deceased_mice.'''
-        pass #TODO
+        if cage != None:
+            if mouse.number in cage:
+                mouse.living = False
+                self.deceased_mice[mouse.number] = cage.pop(mouse.number)
+                return True
+            else:
+                if mouse.number in self.deceased_mice:
+                    raise MouseDeceasedError
+                else:
+                    raise MouseNotFoundError
+        else:
+            for cage_tmp in self.cages:
+                if mouse.number in cage_tmp:
+                    mouse.living = False
+                    self.deceased_mice[mouse.number] = cage_tmp.pop(
+                                                            mouse.number)
+                    return True
+        if mouse.number in self.deceased_mice:
+            raise MouseDeceasedError
+        else:
+            raise MouseNotFoundError
 
 #Master Dict of All Colonies
 colonies = {}
+
+def add_colony(name):
+    colonies[name] = Colony(name)
+
+def remove_colony(name):
+    if name in colonies:
+        return colonies.pop(name)
+    else:
+        print(f"Error: Colony {name} not found.")
+
 
 def list_colonies():
     return [x[1] for x in colonies.items()]
@@ -116,7 +172,18 @@ def list_colonies():
 def import_mice(filename):
     '''Imports mice from a file. Supports multiple formats as long as the\
         header and indices are correct in file.'''
-    pass #TODO
+    pass #TODO, use pandas for csv/txt & Excel
+
+def check_deceased(mouse, colony_in=None):
+    '''Returns True if mouse is deceased, False if living.'''
+    if colony_in == None:
+        for colony in colonies:
+            if mouse.number in colony.deceased_mice:
+                return True
+    else:
+        if mouse.number in colony_in.deceased_mice:
+            return True
+    return False
 
 def find_mouse(mouse, colony_in=None, cage_in=None):
     '''Searches for a mouse. Returns tuple of (colony, cage).'''
@@ -140,18 +207,10 @@ def find_mouse(mouse, colony_in=None, cage_in=None):
             if cage_in.number in colony_in.cages:
                 if mouse.number in colony_in.cages[cage_in.number]:
                     return (colony_in, cage_in)
-    raise MouseNotFound
-
-def check_deceased(mouse, colony_in=None):
-    '''Returns True if mouse is deceased, False if living.'''
-    if colony_in == None:
-        for colony in colonies:
-            if mouse.number in colony.deceased_mice:
-                return True
+    if check_deceased(mouse, colony_in) == True:
+        raise MouseDeceasedError
     else:
-        if mouse.number in colony_in.deceased_mice:
-            return True
-    return False
+        raise MouseNotFoundError
 
 def find_lineage(mouse):
     '''Returns list of mice which is the complete lineage for a mouse.\
