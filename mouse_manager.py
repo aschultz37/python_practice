@@ -1,7 +1,15 @@
+"""Mouse Management Program
+*TODO*: Update code to utilize mouse_in_cage, mouse_in_colony,
+        cage_in_colony, etc. to make easier to read.
+        Also update to use Cage.list_mice(), Colony.list_cages(), etc.
+"""
+
 from calendar import monthrange
 from datetime import date
 from anytree import Node, RenderTree
+from anytree.exporter import DotExporter
 #import os
+#import numpy as np
 #import pandas as pd
 
 def NoKeyError(Exception):
@@ -13,6 +21,12 @@ def MouseDeceasedError(Exception):
 def MouseNotFoundError(Exception):
     pass
 
+def CageNotEmptyError(Exception):
+    pass
+
+def CageNotFoundError(Exception):
+    pass
+
 #Track the globally unique numbers for mice and cages
 global_mouse_number = 0
 global_cage_number = 0
@@ -21,7 +35,7 @@ class Mouse:
     '''For each mouse, stores globally unqiue number, number in cage, age,
         genotype, parents, children, and if mouse is alive.'''
     def __init__(self, mother, father, lineage: Node=None, 
-                num_in_cage: int=None, d_o_b=date.today(), genotype=None,
+                num_in_cage: int=None, d_o_b: date=date.today(), genotype=None,
                 living=True):
         '''WARN: mother and father MUST be of type Mouse.'''
         global global_mouse_number
@@ -49,6 +63,12 @@ class Cage:
         self.mice = {}
         global_cage_number = global_cage_number + 1
     
+    def mouse_in_cage(self, mouse: Mouse):
+        if mouse.number in self.mice:
+            return True
+        else:
+            return False
+
     def list_mice(self):
         '''Returns a list of all mice in the cage.'''
         return [x[1] for x in self.mice.items()]
@@ -79,15 +99,55 @@ class Cage:
                 raise NoKeyError
 
 class Colony:
-    '''Stores all cages in a colony as a dictionary.'''
+    '''Stores all cages in a colony as a dictionary. Tracks deceased mice and
+     inactive cages as dictionaries.'''
     def __init__(self, name: str, cages: dict=None):
         self.name = name
         self.cages = cages
         self.deceased_mice = {}
+        self.inactive_cages = {}
     
-    def list_cages(self):
-        '''Returns a list of all cages in the colony.'''
+    def mouse_in_colony(self, mouse: Mouse):
+        for cage in self.cages:
+            if mouse.number in cage[1]:
+                return True
+        return False
+
+    def cage_in_colony(self, cage: Cage):
+        if cage.number in self.cages:
+            return True
+        else:
+            return False
+
+    def list_active_cages(self):
+        '''Returns a list of all active cages in the colony.'''
         return [x[1] for x in self.cages.items()]
+
+    def list_inactive_cages(self):
+        '''Returns a list of all inactive cages in the colony.'''
+        return [x[1] for x in self.inactive_cages.items()]
+
+    def list_all_cages(self):
+        '''Returns a dictionary of all cages formatted as
+        {'active': [], 'inactive': []}.'''
+        return {'active': self.list_active_cages, 
+                'inactive': self.list_inactive_cages}
+    
+    def list_living_mice(self):
+        '''Returns a list of all living mice in the colony.'''
+        return [mouse.number for cage in self.cages.items() 
+                for mouse in cage[1]]
+    
+    def list_deceased_mice(self):
+        '''Returns a list of all deceased mice in the colony.'''
+        return [mouse.number for cage in self.cages.items() 
+                for mouse in cage[1]]
+
+    def list_all_mice(self):
+        '''Returns a dictionary of all mice formatted as
+        {'living': [], 'deceased': []}.'''
+        return {'living': self.list_living_mice, 
+                'deceased': self.list_deceased_mice}
 
     def add_cage(self, cage: Cage):
         '''Adds a cage to the colony.'''
@@ -101,12 +161,16 @@ class Colony:
             directly by cage number. NoKeyError if neither is provided.'''
         if key != None:
             try:
+                if len(self.cages[key].mice) != 0:
+                    raise CageNotEmptyError
                 return self.cages.pop(key)
             except KeyError:
                 print(f"Error: Key {key} not found in colony {self.name}.")
         else:
             if cage != None:
                 try:
+                    if len(self.cages[cage.number].mice) != 0:
+                        raise CageNotEmptyError
                     return self.cages.pop(cage.number)
                 except KeyError:
                     print(f"Error: Cage {cage.number} not found in colony \
@@ -163,6 +227,17 @@ class Colony:
             raise MouseDeceasedError
         else:
             raise MouseNotFoundError
+
+    def sac_cage(self, cage: Cage):
+        '''For all mice in a cage, changes mouse living status to False.
+         Removes cage from Colony.cages.'''
+        if cage.number in self.cages:
+            for mouse in cage:
+                self.sac_mouse(mouse, cage)
+            self.cages.pop(cage.number)
+        else:
+            raise CageNotFoundError
+
 
 #Master Dict of All Colonies
 colonies = {}
@@ -226,9 +301,16 @@ def find_mouse(mouse, colony_in: Colony=None, cage_in: Cage=None):
     else:
         raise MouseNotFoundError
 
-def find_lineage(mouse: Mouse):
-    '''Returns the lineage of a mouse as the root of a binary tree.'''
-    pass #TODO
+def generate_lineage(mouse: Mouse, prev_node: Node=None):
+    '''Returns the lineage of a mouse as the root of a tree.'''
+    #start at mouse as root node
+    root = Node({'mother': mouse.mother, 'father': mouse.father}, prev_node)
+    if mouse.mother != None:
+        generate_lineage(mouse.mother, root)
+    if mouse.father != None:
+        generate_lineage(mouse.father, root)
+    return root
+
 
 def switch_colony(mouse: Mouse, old_colony: Colony, new_colony: Colony,
                   new_cage_num: int, old_cage_num: int=None):
