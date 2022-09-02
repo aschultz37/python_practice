@@ -1,4 +1,6 @@
+from calendar import monthrange
 from datetime import date
+from anytree import Node, RenderTree
 #import os
 #import pandas as pd
 
@@ -18,13 +20,15 @@ global_cage_number = 0
 class Mouse:
     '''For each mouse, stores globally unqiue number, number in cage, age,
         genotype, parents, children, and if mouse is alive.'''
-    def __init__(self, mother_mouse, father_mouse, 
+    def __init__(self, mother, father, lineage: Node=None, 
                 num_in_cage: int=None, d_o_b=date.today(), genotype=None,
                 living=True):
-        '''WARN: mother_mouse and father_mouse MUST be of type Mouse.'''
+        '''WARN: mother and father MUST be of type Mouse.'''
         global global_mouse_number
         self.number = global_mouse_number
-        self.lineage = Node(mother_mouse, father_mouse, self.number)
+        self.mother = mother
+        self.father = father
+        self.lineage = lineage
         self.num_in_cage = num_in_cage
         self.d_o_b = d_o_b
         self.genotype = genotype
@@ -159,29 +163,6 @@ class Colony:
             raise MouseDeceasedError
         else:
             raise MouseNotFoundError
-
-class Node:
-    '''To implement a tree for tracking lineage.'''
-    def __init__(self, mother: Mouse, father: Mouse, number: int):
-        self.mother = mother #left
-        self.father = father #right
-        self.number = number #data
-
-    def pre_order(self):
-        pass
-
-    def post_order(self):
-        pass
-
-    def print_tree(self):
-        '''Prints left subtree (mothers), then root, then right subtree
-        (fathers).'''
-        if self.mother != None:
-            self.print_tree(self.mother)
-        print(f'Mouse {self.number}:\nMother {self.mother.number:10d} Father\
-         {self.father.number:10d}')
-        if self.father != None:
-            self.print_tree(self.father)
 
 #Master Dict of All Colonies
 colonies = {}
