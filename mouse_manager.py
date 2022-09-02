@@ -19,15 +19,17 @@ class Mouse:
     '''For each mouse, stores globally unqiue number, number in cage, age,
         genotype, parents, children, and if mouse is alive.'''
     def __init__(self, mother_mouse, father_mouse, 
-                number: int=global_mouse_number, num_in_cage: int=None,
-                d_o_b=date.today(), genotype=None, living=True):
+                num_in_cage: int=None, d_o_b=date.today(), genotype=None,
+                living=True):
         '''WARN: mother_mouse and father_mouse MUST be of type Mouse.'''
-        self.number = number
-        self.lineage = Node(mother_mouse, father_mouse, number)
+        global global_mouse_number
+        self.number = global_mouse_number
+        self.lineage = Node(mother_mouse, father_mouse, self.number)
         self.num_in_cage = num_in_cage
         self.d_o_b = d_o_b
         self.genotype = genotype
         self.living = living
+        global_mouse_number = global_mouse_number + 1
     
     def list_mouse_info(self):
         '''Returns a list containing all data in Mouse object.'''
@@ -36,8 +38,9 @@ class Mouse:
 
 class Cage:
     '''Stores cage number, physical location, and list of mice in cage.'''
-    def __init__(self, location: str, number: int=global_cage_number):
-        self.number = number
+    def __init__(self, location: str):
+        global global_cage_number
+        self.number = global_cage_number
         self.location = location
         self.mice = {}
         global_cage_number = global_cage_number + 1
