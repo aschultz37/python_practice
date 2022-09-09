@@ -67,6 +67,7 @@ class Cage:
         global_cage_number = global_cage_number + 1
     
     def mouse_in_cage(self, mouse: Mouse):
+        '''Checks if a mouse is in cage.'''
         if mouse.number in self.mice:
             return True
         else:
@@ -111,12 +112,14 @@ class Colony:
         self.inactive_cages = {}
     
     def mouse_in_colony(self, mouse: Mouse):
+        '''Checks if a mouse is in colony (in any cage).'''
         for cage in self.cages.items():
-            if mouse.number in cage[1]:
+            if cage.mouse_in_cage(mouse) == True:
                 return True
         return False
 
     def cage_in_colony(self, cage: Cage):
+        '''Checks if a cage is in colony.'''
         if cage.number in self.cages:
             return True
         else:
@@ -166,7 +169,8 @@ class Colony:
             try:
                 if len(self.cages[key].mice) != 0:
                     raise CageNotEmptyError
-                return self.cages.pop(key)
+                else:
+                    return self.cages.pop(key)
             except KeyError:
                 print(f"Error: Key {key} not found in colony {self.name}.")
         else:
@@ -174,7 +178,8 @@ class Colony:
                 try:
                     if len(self.cages[cage.number].mice) != 0:
                         raise CageNotEmptyError
-                    return self.cages.pop(cage.number)
+                    else:
+                        return self.cages.pop(cage.number)
                 except KeyError:
                     print(f"Error: Cage {cage.number} not found in colony \
                         {self.name}.")
@@ -279,27 +284,27 @@ def check_deceased(mouse, colony_in: Colony=None):
             return True
     return False
 
-def find_mouse(mouse, colony_in: Colony=None, cage_in: Cage=None):
+def find_mouse(mouse: Mouse, colony_in: Colony=None, cage_in: Cage=None):
     '''Searches for a mouse. Returns tuple of (colony, cage).'''
-    if cage_in == None:
+    if cage_in == None: #TODO UPDATE with list_x_cages, mouse_in_x, cage_in_x
         if colony_in == None:
             for colony in colonies.items():
-                for cage in colony[1].list_cages():
-                    if mouse.number in cage.mice:
+                for cage in colony[1].list_cages(): #here
+                    if cage.mouse_in_cage(mouse) == True: #here
                         return (colony, cage)
         else:
-            for cage in colony_in.list_cages():
-                if mouse.number in cage.mice:
+            for cage in colony_in.list_cages(): #here
+                if cage.mouse_in_cage(mouse) == True: #here
                     return (colony_in, cage)
     else:
         if colony_in == None:
-            for colony in colonies.items():
-                if cage_in.number in colony[1].cages:
+            for colony in colonies.items(): #here
+                if cage_in.number in colony[1].cages: #here & \/
                     if mouse.number in colony[1].cages[cage_in.number].mice:
                         return (colony, cage_in)
         else:
-            if cage_in.number in colony_in.cages:
-                if mouse.number in colony_in.cages[cage_in.number].mice:
+            if cage_in.number in colony_in.cages: #here & \/
+                if mouse.number in colony_in.cages[cage_in.number].mice: 
                     return (colony_in, cage_in)
     if check_deceased(mouse, colony_in) == True:
         raise MouseDeceasedError
@@ -308,7 +313,7 @@ def find_mouse(mouse, colony_in: Colony=None, cage_in: Cage=None):
 
 def generate_lineage(mouse: Mouse, prev_node: Node=None):
     '''Returns the lineage of a mouse as the root of a tree.'''
-    #start at mouse as root node
+    #TODO read through this again; start at mouse as root node
     root = Node({'mother': mouse.mother, 'father': mouse.father}, prev_node)
     if mouse.mother != None:
         generate_lineage(mouse.mother, root)
